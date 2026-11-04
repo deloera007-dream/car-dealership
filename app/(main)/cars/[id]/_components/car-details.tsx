@@ -100,6 +100,15 @@ export function CarDetails({
     router.push(ROUTES.ADMIN.ADMIN_TEST_DRIVES);
   };
 
+  const handleApplyForFinancing = () => {
+    const path = ROUTES.APPLY_FOR_FINANCING(car.id);
+    if (!isSignedIn) {
+      openSignInModal(path);
+      return;
+    }
+    router.push(path);
+  };
+
   // Handle edit car
   const handleEditCar = () => {
     router.push(ROUTES.ADMIN.ADMIN_CAR_EDIT(car.id));
@@ -237,6 +246,16 @@ export function CarDetails({
                   : "Book Test Drive"}
               </Button>
             ))}
+
+          {!isAdmin && car.status === CarStatus.AVAILABLE && (
+            <Button
+              variant="outline"
+              className="mt-3 w-full py-6 text-lg"
+              onClick={handleApplyForFinancing}
+            >
+              Apply for Financing
+            </Button>
+          )}
 
           {/* Secondary Actions */}
           <CarSecondaryActions

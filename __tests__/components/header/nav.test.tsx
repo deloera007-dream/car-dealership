@@ -29,7 +29,20 @@ vi.mock("@/components/header/account-dialog", () => ({
 describe("nav-items data", () => {
   it("defines main nav items with expected routes and flags", () => {
     const labels = MAIN_NAV_ITEMS.map((i) => i.label);
-    expect(labels).toEqual(["Home", "All Cars", "Saved", "Reservations"]);
+    expect(labels).toEqual([
+      "Home",
+      "All Cars",
+      "Saved",
+      "My Applications",
+      "Reservations",
+    ]);
+
+    const applications = MAIN_NAV_ITEMS.find(
+      (i) => i.label === "My Applications",
+    )!;
+    expect(applications.href).toBe("/my-applications");
+    expect(applications.requiresAuth).toBe(true);
+    expect(applications.showInMobile).toBe(true);
 
     const saved = MAIN_NAV_ITEMS.find((i) => i.label === "Saved")!;
     expect(saved.requiresAuth).toBe(true);
@@ -69,6 +82,7 @@ describe("DesktopNav", () => {
     expect(screen.getByText("All Cars")).toBeInTheDocument();
     expect(screen.queryByText("Saved")).not.toBeInTheDocument();
     expect(screen.queryByText("Reservations")).not.toBeInTheDocument();
+    expect(screen.queryByText("My Applications")).not.toBeInTheDocument();
   });
 
   it("shows auth-gated items when authenticated", () => {
@@ -76,6 +90,7 @@ describe("DesktopNav", () => {
 
     expect(screen.getByText("Saved")).toBeInTheDocument();
     expect(screen.getByText("Reservations")).toBeInTheDocument();
+    expect(screen.getByText("My Applications")).toBeInTheDocument();
   });
 
   it("hides Reservations for admins but keeps other items", () => {

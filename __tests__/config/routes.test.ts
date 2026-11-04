@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ROUTES } from "@/config/routes";
+import { PROTECTED_ROUTES, ROUTES } from "@/config/routes";
 
 describe("ROUTES", () => {
   it("returns static routes", () => {
@@ -10,6 +10,8 @@ describe("ROUTES", () => {
     expect(ROUTES.AUTH.OAUTH_CONSENT).toBe("/oauth/consent");
     expect(ROUTES.SAVED_CARS).toBe("/saved-cars");
     expect(ROUTES.RESERVATIONS).toBe("/reservations");
+    expect(ROUTES.MY_APPLICATIONS).toBe("/my-applications");
+    expect(PROTECTED_ROUTES).toContain(ROUTES.MY_APPLICATIONS);
     expect(ROUTES.ADMIN.ADMIN).toBe("/admin");
     expect(ROUTES.ADMIN.ADMIN_CARS).toBe("/admin/cars");
     expect(ROUTES.ADMIN.ADMIN_CAR_CREATE).toBe("/admin/cars/create");
@@ -27,6 +29,7 @@ describe("ROUTES", () => {
   it("builds dynamic routes", () => {
     expect(ROUTES.HOME.CAR_DETAILS("123")).toBe("/cars/123");
     expect(ROUTES.TEST_DRIVE("abc")).toBe("/test-drive/abc");
+    expect(ROUTES.APPLY_FOR_FINANCING("abc")).toBe("/cars/abc/apply");
     expect(ROUTES.ADMIN.ADMIN_CAR_EDIT("456")).toBe("/admin/cars/456/edit");
   });
 });
