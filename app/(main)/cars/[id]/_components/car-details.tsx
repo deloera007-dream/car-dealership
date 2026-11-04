@@ -10,6 +10,7 @@ import { CarGallery } from "@/app/(main)/cars/[id]/_components/car-gallery";
 import { CarInquiryCard } from "@/app/(main)/cars/[id]/_components/car-inquiry-card";
 import { CarSecondaryActions } from "@/app/(main)/cars/[id]/_components/car-secondary-actions";
 import { CarSpecifications } from "@/app/(main)/cars/[id]/_components/car-specifications";
+import { FinancingCalculator } from "@/app/(main)/cars/[id]/_components/financing-calculator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -270,6 +271,8 @@ export function CarDetails({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <FinancingCalculator key={`${car.id}-${car.price}`} price={car.price} />
 
       {/* Details & Features Section */}
       <div className="mt-12 rounded-lg bg-white p-6 shadow-sm">
