@@ -1,4 +1,5 @@
 import type React from "react";
+import { MarketplaceShell } from "@/components/marketplace-shell";
 
 /**
  * Renders the main content wrapper for the authenticated route tree.
@@ -7,7 +8,7 @@ import type React from "react";
  * @param children - Page content to render inside the container.
  */
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
-  return <div className="container mx-auto my-20 px-4">{children}</div>;
+  return <MarketplaceShell>{children}</MarketplaceShell>;
 };
 
 export default MainLayout;

@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 import { isCurrentUserAdmin } from "@/actions/auth/is-current-user-admin";
 import { getCarById } from "@/actions/cars/get-car-by-id";
+import { PrototypeCarDetails } from "@/app/(main)/cars/_components/prototype-marketplace";
 import { CarDetails } from "@/app/(main)/cars/[id]/_components/car-details";
+import { prototypeCars } from "@/lib/prototype-inventory";
+import { prototypeMode } from "@/lib/prototype-mode";
 
 /**
  * Generates SEO metadata for a car detail page.
@@ -15,6 +18,10 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  if (prototypeMode) {
+    const car = prototypeCars.find((car) => car.id === id);
+    return { title: car ? `${car.make} ${car.model} | Demo` : "Car not found" };
+  }
   const result = await getCarById(id);
 
   if (!result.success) {
@@ -48,6 +55,11 @@ export default async function CarDetailsPage({
 }) {
   // Fetch car details
   const { id } = await params;
+  if (prototypeMode) {
+    const car = prototypeCars.find((car) => car.id === id);
+    if (!car) notFound();
+    return <PrototypeCarDetails car={car} />;
+  }
   const result = await getCarById(id);
 
   // If car not found, show 404
@@ -59,7 +71,7 @@ export default async function CarDetailsPage({
   const isAdmin = await isCurrentUserAdmin();
 
   return (
-    <div className="py-12">
+    <div>
       <CarDetails
         car={{
           ...result.data,

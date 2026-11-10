@@ -9,6 +9,54 @@ With AI Car Marketplace, you can browse available vehicles, save your favorites,
 The platform includes a complete admin portal for dealership management.
 
 # Features
+## Mobile ownership prototype
+
+A Kavak-inspired concept (not affiliated with Kavak) uses a phone-width layout,
+five bottom tabs and safe-area padding for iOS Safari and Android Chrome. It is
+a responsive web demo, not a native app. Existing admin and authenticated routes
+retain their original layout and access controls.
+
+To explore with **no Supabase or Arcjet credentials**, opt into mock mode:
+
+```sh
+NEXT_PUBLIC_PROTOTYPE_MODE=true yarn dev
+```
+
+Set the same flag at **build time** for a production demo build. `/` redirects to
+`/cars` in this mode. Without the flag, the existing Supabase marketplace remains
+active on the same buy routes, restyled inside the mobile shell. Do not enable
+the flag for a live dealership deployment: it intentionally serves mock public
+pages without external auth/security services. Admin, APIs, saved cars and
+reservations are not on that mock-only allowlist and still require real service
+configuration and authentication. The demo Account tab is not an admin login.
+
+| Flow | Route | What to try |
+| --- | --- | --- |
+| Buy | `/cars`, `/cars/demo-toyota-corolla` | Search, filter by body/make/price, sort, view sample details and simulate interest. Sample photos are representative body-style images. |
+| Sell | `/sell` | Make/model/year/mileage → condition → 1–6 local photos → mock instant offer. |
+| Value | `/value` | Enter car details and condition for an estimated market range. |
+| Trade/change | Car detail → **Trade in your car** | Value your current car; compare its mock offer with the selected car price, including surplus credit. Assumes the trade-in is owned outright. |
+| Equity loan | `/loans` | Enter car value, loan balance and term; simulate an equity-backed loan or a no-equity outcome. |
+| Account | `/account` | Guest demo entry points; no account required. |
+
+All prototype calculations use GBP and miles, matching the existing marketplace.
+Supported makes/models are in `lib/vehicle-catalog.ts`. Valuations are deterministic:
+fixed 2026 reference year, model base price × annual depreciation (12%) × mileage
+factor × condition factor, rounded to £100. The instant offer is 92% of that
+estimate, rounded to £100. Loan offers use 70% of positive equity, rounded down to
+£100, a mock 12.9% fixed annual rate, 12/24/36/48-month amortisation and no fees.
+These are illustrative estimates, **not binding offers, real credit or financial
+advice**. A real secured loan may put the vehicle at risk.
+
+Forms use Zod validation in `schemas/prototype.schema.ts`. Photos stay local
+(JPG/PNG/WebP, max 5 MB each), preview URLs are released when no longer needed,
+and no prototype data is uploaded or persisted to Supabase. Form state and demo
+favourites are temporary and reset on navigation/reload. No purchase, booking,
+credit check or funds transfer occurs. The live marketplace's original saved-car
+and test-drive actions are unchanged.
+
+Checks: `yarn vitest run`, `yarn biome check .`, `yarn tsc --noEmit`.
+
 ## Authentication
 The system has several key user authentication and account management features designed to ensure that users have a seamless and secure experience:
 - Users can sign up using email and password

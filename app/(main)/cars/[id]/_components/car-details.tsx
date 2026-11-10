@@ -10,6 +10,7 @@ import { CarGallery } from "@/app/(main)/cars/[id]/_components/car-gallery";
 import { CarInquiryCard } from "@/app/(main)/cars/[id]/_components/car-inquiry-card";
 import { CarSecondaryActions } from "@/app/(main)/cars/[id]/_components/car-secondary-actions";
 import { CarSpecifications } from "@/app/(main)/cars/[id]/_components/car-specifications";
+import { TradeIn } from "@/components/prototype-vehicle-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -245,6 +246,9 @@ export function CarDetails({
             carTitle={carTitle}
             initialWishlisted={car.wishlisted}
           />
+          {!isAdmin && car.status === CarStatus.AVAILABLE && (
+            <TradeIn targetPrice={car.price} targetName={carTitle} />
+          )}
         </div>
       </div>
 
