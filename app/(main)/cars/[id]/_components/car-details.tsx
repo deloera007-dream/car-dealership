@@ -36,6 +36,7 @@ import useAuthModal from "@/hooks/use-auth-modal";
 import { useCarAdmin } from "@/hooks/use-car-admin";
 import { useUser } from "@/hooks/use-user";
 import { formatCurrency } from "@/lib/helpers/format-currency";
+import { TradeIn } from "@/components/prototype-vehicle-form";
 import type { SerializedCar } from "@/types/car/serialized-car";
 import type { SerializedDealershipInfo } from "@/types/dealership/serialized-dealership-info";
 import type { UserTestDrive } from "@/types/test-drive/user-test-drive";
@@ -245,6 +246,9 @@ export function CarDetails({
             carTitle={carTitle}
             initialWishlisted={car.wishlisted}
           />
+          {!isAdmin && car.status === CarStatus.AVAILABLE && (
+            <TradeIn targetPrice={car.price} targetName={carTitle} />
+          )}
         </div>
       </div>
 

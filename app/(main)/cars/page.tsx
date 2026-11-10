@@ -1,6 +1,8 @@
 import { getCarFilters } from "@/actions/cars/get-car-filters";
 import { CarFilters } from "@/app/(main)/cars/_components/car-filters";
 import { CarListings } from "@/app/(main)/cars/_components/cars-listing";
+import { PrototypeMarketplace } from "@/app/(main)/cars/_components/prototype-marketplace";
+import { prototypeMode } from "@/lib/prototype-mode";
 
 /**
  * Defines SEO metadata for the car inventory page.
@@ -21,6 +23,7 @@ export const metadata = {
  * @see CarListings - Client component that renders searchable inventory.
  */
 export default async function CarsPage() {
+  if (prototypeMode) return <PrototypeMarketplace />;
   // Fetch filters data on the server
   const filtersData = await getCarFilters();
 
@@ -33,12 +36,14 @@ export default async function CarsPage() {
   }
 
   return (
-    <div className="py-12">
-      <h1 className="gradient-title mb-4 text-6xl">Browse Cars</h1>
+    <div>
+      <h1 className="mb-6 font-bold text-3xl tracking-tight">
+        Find your next car.
+      </h1>
 
-      <div className="flex flex-col gap-8 lg:flex-row">
+      <div className="flex flex-col gap-5">
         {/* Filters Section */}
-        <div className="w-full shrink-0 lg:w-80">
+        <div className="w-full">
           <CarFilters filters={filtersData.data} />
         </div>
 

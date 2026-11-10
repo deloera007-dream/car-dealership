@@ -92,6 +92,7 @@ export function validateEnv(
 ): Env {
   const schema = isServerEnv ? serverEnvSchema : clientEnvSchema;
   const skipValidation =
+    process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
     process.env.SKIP_ENV_VALIDATION === "true" ||
     runtimeEnv.SKIP_ENV_VALIDATION === "true";
 

@@ -3,6 +3,45 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.marketplace {
+  --primary: #185adb;
+  --primary-foreground: #fff;
+  --ring: #185adb;
+  color: #152238;
+}
+
+.marketplace input,
+.marketplace select {
+  font-size: 16px;
+  min-height: 44px;
+}
+.marketplace [data-slot="button"] {
+  min-height: 44px;
+}
+.marketplace .lg\:flex-row {
+  flex-direction: column;
+}
+.marketplace .lg\:w-7\/12,
+.marketplace .lg\:w-5\/12 {
+  width: 100%;
+}
+.marketplace .lg\:grid-cols-3,
+.marketplace .md\:grid-cols-2 {
+  grid-template-columns: minmax(0, 1fr);
+}
+.marketplace .lg\:hidden {
+  display: block;
+}
+.marketplace .hidden.lg\:block {
+  display: none;
+}
+
+@media (min-width: 481px) {
+  body:has(.marketplace) {
+    background: #edf1f7;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

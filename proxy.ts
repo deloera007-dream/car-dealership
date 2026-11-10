@@ -8,6 +8,7 @@ import {
 } from "next/server";
 import { env } from "@/config/env";
 import { PROTECTED_ROUTES, ROUTES } from "@/config/routes";
+import { isPrototypeRoute, prototypeMode } from "@/lib/prototype-mode";
 import { createSignInRedirect } from "@/lib/route/create-sign-in-redirect";
 import { getSafeRedirectPath } from "@/lib/route/safe-redirect";
 
@@ -189,6 +190,9 @@ export default async function middleware(
     }
     return NextResponse.next();
   }
+
+  // Only mock-only public pages can run without external services.
+  if (prototypeMode && isPrototypeRoute(pathname)) return NextResponse.next();
 
   return browserMiddleware(request, event);
 }

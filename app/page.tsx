@@ -1,6 +1,8 @@
 import { Calendar, Car, ChevronRight, Shield } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { prototypeMode } from "@/lib/prototype-mode";
 import { getFAQs } from "@/actions/home/get-faqs";
 import { getFeaturedCars } from "@/actions/home/get-featured-cars";
 import { getHomePageContent } from "@/actions/home/get-home-page-content";
@@ -26,6 +28,7 @@ import { createCarSearchUrl } from "@/lib/route/create-car-search-url";
  * @returns The rendered home page.
  */
 export default async function Home() {
+  if (prototypeMode) redirect("/cars");
   const featuredCars = await getFeaturedCars();
   const homeContent = await getHomePageContent();
   const faqs = await getFAQs();
