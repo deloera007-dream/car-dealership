@@ -29,11 +29,15 @@ export function SiteChrome({
 }) {
   const pathname = usePathname();
   const marketplace = isMarketplaceRoute(pathname);
+  const layoutOwnsHeader =
+    pathname === "/admin" || pathname.startsWith("/admin/");
   if (prototypeMode && isPrototypeRoute(pathname)) return children;
   return (
     <SupabaseProvider>
       <UserProvider>
-        {!marketplace && (header ?? <PrototypeLegacyHeader />)}
+        {!marketplace &&
+          !layoutOwnsHeader &&
+          (header ?? <PrototypeLegacyHeader />)}
         {children}
         {!marketplace && footer}
         <SignInModal />

@@ -93,6 +93,42 @@ describe("prototype legacy navigation", () => {
       screen.queryByRole("button", { name: "Sign out" }),
     ).not.toBeInTheDocument();
   });
+  it.each(["/admin", "/admin/cars", "/admin/settings"])(
+    "leaves header ownership to the admin layout on %s",
+    (pathname) => {
+      state.pathname = pathname;
+      render(
+        <SiteChrome header={null} footer={<p>Legacy footer</p>}>
+          <header aria-label="Admin navigation">
+            <button type="button">Manage inventory</button>
+          </header>
+        </SiteChrome>,
+      );
+      expect(screen.getByTestId("supabase-provider")).toBeInTheDocument();
+      expect(screen.getAllByRole("banner")).toHaveLength(1);
+      expect(
+        screen.getByRole("button", { name: "Manage inventory" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "Sign out" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("link", { name: "Admin Portal" }),
+      ).not.toBeInTheDocument();
+    },
+  );
+  it("does not render the supplied public header over an admin layout", () => {
+    state.pathname = "/admin/cars";
+    renderChrome(
+      <header>
+        <a href="/cars">Public navigation</a>
+      </header>,
+    );
+    expect(
+      screen.queryByRole("link", { name: "Public navigation" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText("Page content")).toBeInTheDocument();
+  });
   it.each([
     "/cars",
     "/cars/demo-toyota-corolla",
