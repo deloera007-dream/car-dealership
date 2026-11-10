@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  getUser: vi.fn(),
   passkeyList: vi.fn(),
   passkeyDelete: vi.fn(),
 }));
@@ -8,6 +9,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/supabase/supabase", () => ({
   createClient: async () => ({
     auth: {
+      getUser: mocks.getUser,
       passkey: {
         list: mocks.passkeyList,
         delete: mocks.passkeyDelete,
@@ -22,6 +24,24 @@ vi.mock("@/lib/arcjet", () => ({ default: {} }));
 
 import { deleteUserPasskey } from "@/actions/auth/delete-user-passkey";
 import { listUserPasskeys } from "@/actions/auth/list-user-passkeys";
+
+beforeEach(() => {
+  mocks.getUser.mockResolvedValue({
+    data: { user: { id: "current-user" } },
+    error: null,
+  });
+});
+
+it.each([deleteUserPasskey, listUserPasskeys])(
+  "rejects unauthenticated passkey operations",
+  async (action) => {
+    vi.clearAllMocks();
+    mocks.getUser.mockResolvedValueOnce({ data: { user: null }, error: null });
+    expect((await action("pk-123")).success).toBe(false);
+    expect(mocks.passkeyList).not.toHaveBeenCalled();
+    expect(mocks.passkeyDelete).not.toHaveBeenCalled();
+  },
+);
 
 describe("listUserPasskeys", () => {
   beforeEach(() => {

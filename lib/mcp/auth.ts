@@ -6,6 +6,7 @@ import {
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getOrCreateDbUser } from "@/actions/cars/get-or-create-db-user";
 import { UserRoleEnum as UserRole } from "@/enums/user-role";
+import { getSiteUrl } from "@/lib/site-url";
 import { createClient, createTokenClient } from "@/lib/supabase/supabase";
 
 export interface McpAuthContext {
@@ -111,7 +112,14 @@ export async function verifyMcpToken(
 
   // Case 2: SSR cookie fallback if cookies are present
   const cookieHeader = req.headers.get("cookie");
-  if (cookieHeader) {
+  const origin = req.headers.get("origin");
+  const sameOrigin = origin === new URL(getSiteUrl()).origin;
+  const fetchSite = req.headers.get("sec-fetch-site");
+  if (
+    cookieHeader &&
+    (!origin || sameOrigin) &&
+    (!fetchSite || fetchSite === "same-origin" || fetchSite === "none")
+  ) {
     try {
       const supabase = await createClient();
       const {

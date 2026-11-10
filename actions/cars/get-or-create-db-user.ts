@@ -1,5 +1,3 @@
-"use server";
-
 import type {
   User as SupabaseAuthUser,
   SupabaseClient,

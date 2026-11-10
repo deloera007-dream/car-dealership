@@ -164,6 +164,45 @@ describe("verifyMcpToken", () => {
     expect(result).toBeUndefined();
   });
 
+  it.each([
+    { origin: "https://untrusted.example" },
+    { origin: "null" },
+    { "sec-fetch-site": "cross-site" },
+    { "sec-fetch-site": "same-site" },
+  ])(
+    "never promotes cross-origin cookie requests to authenticated MCP sessions: %j",
+    async (headers) => {
+      const req = new Request("http://localhost:3000/api/mcp", {
+        method: "POST",
+        headers: { cookie: "sb-auth-token=valid-cookie", ...headers },
+      });
+      expect(await verifyMcpToken(req)).toBeUndefined();
+      expect(h.createClientMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("allows same-origin cookie sessions", async () => {
+    const req = new Request("http://localhost:3000/api/mcp", {
+      method: "POST",
+      headers: {
+        cookie: "sb-auth-token=valid-cookie",
+        origin: "http://localhost:3000",
+        "sec-fetch-site": "same-origin",
+      },
+    });
+    expect((await verifyMcpToken(req))?.scopes).toEqual(["user"]);
+  });
+
+  it("allows cross-origin clients that explicitly present a valid bearer token", async () => {
+    const req = new Request("http://localhost:3000/api/mcp", {
+      method: "POST",
+      headers: { origin: "https://mcp-client.example" },
+    });
+    expect((await verifyMcpToken(req, "valid-bearer"))?.scopes).toEqual([
+      "user",
+    ]);
+  });
+
   it("throws OAuthError(InvalidToken) when ?auth=required is set and request is unauthenticated", async () => {
     const req = new Request("http://localhost/api/mcp?auth=required", {
       method: "POST",

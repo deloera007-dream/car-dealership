@@ -5,8 +5,11 @@ const h = vi.hoisted(() => {
   const mockCreateClient = vi.fn();
   return {
     mockCreateClient,
+    protect: vi.fn(),
   };
 });
+
+vi.mock("@/lib/arcjet", () => ({ default: { protect: h.protect } }));
 
 vi.mock("@/lib/supabase/supabase", async (importOriginal) => {
   const actual =
@@ -38,6 +41,10 @@ describe("OAuth 2.1 RFC 8414 Discovery & RFC 7591 Registration Endpoints", () =>
   beforeEach(() => {
     vi.clearAllMocks();
     global.fetch = vi.fn();
+    h.protect.mockResolvedValue({
+      isDenied: () => false,
+      isErrored: () => false,
+    });
   });
 
   describe("RFC 8414 Authorization Server Metadata (GET / OPTIONS)", () => {
@@ -170,7 +177,7 @@ describe("OAuth 2.1 RFC 8414 Discovery & RFC 7591 Registration Endpoints", () =>
         data: {
           client_id: "admin-registered-client-456",
           client_name: "Claude Desktop",
-          redirect_uris: ["http://localhost:8080/callback"],
+          redirect_uris: ["com.example.desktop:/callback"],
           client_type: "public",
         },
         error: null,
@@ -181,7 +188,7 @@ describe("OAuth 2.1 RFC 8414 Discovery & RFC 7591 Registration Endpoints", () =>
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           client_name: "Claude Desktop",
-          redirect_uris: ["http://localhost:8080/callback"],
+          redirect_uris: ["com.example.desktop:/callback"],
         }),
       }) as NextRequest;
 
@@ -193,9 +200,104 @@ describe("OAuth 2.1 RFC 8414 Discovery & RFC 7591 Registration Endpoints", () =>
       expect(h.mockCreateClient).toHaveBeenCalledWith(
         expect.objectContaining({
           client_name: "Claude Desktop",
-          redirect_uris: ["http://localhost:8080/callback"],
+          redirect_uris: ["com.example.desktop:/callback"],
         }),
       );
+    });
+
+    it.each([
+      "/callback",
+      "not a URI",
+      "http://example.com/callback",
+      "javascript:alert(1)",
+      "data:text/html,test",
+      "file:///tmp/callback",
+      "https://example.com/callback#fragment",
+      "https://user:pass@example.com/cb",
+      "https://example.com/has space",
+      "https:\\example.com\\callback",
+    ])(
+      "rejects unsafe redirect URI %s before either registration path",
+      async (uri) => {
+        const req = new Request("http://localhost/api/oauth/register", {
+          method: "POST",
+          body: JSON.stringify({ redirect_uris: [uri] }),
+        }) as NextRequest;
+        expect((await postRegister(req)).status).toBe(400);
+        expect(global.fetch).not.toHaveBeenCalled();
+        expect(h.mockCreateClient).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each([null, [], "text", 1])(
+      "rejects non-object JSON %j",
+      async (body) => {
+        const req = new Request("http://localhost/api/oauth/register", {
+          method: "POST",
+          body: JSON.stringify(body),
+        }) as NextRequest;
+        expect((await postRegister(req)).status).toBe(400);
+        expect(global.fetch).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each([400, 401, 403, 429, 500])(
+      "does not bypass upstream status %s using service-role fallback",
+      async (status) => {
+        vi.mocked(global.fetch).mockResolvedValueOnce(
+          new Response("{}", { status }),
+        );
+        const req = new Request("http://localhost/api/oauth/register", {
+          method: "POST",
+          body: JSON.stringify({ redirect_uris: ["https://example.com/cb"] }),
+        }) as NextRequest;
+        expect((await postRegister(req)).status).toBe(
+          status === 429 ? 429 : 400,
+        );
+        expect(h.mockCreateClient).not.toHaveBeenCalled();
+      },
+    );
+
+    it("fails closed before public or admin registration when Arcjet denies", async () => {
+      h.protect.mockResolvedValueOnce({ isDenied: () => true });
+      const req = new Request("http://localhost/api/oauth/register", {
+        method: "POST",
+        body: JSON.stringify({ redirect_uris: ["https://example.com/cb"] }),
+      }) as NextRequest;
+      expect((await postRegister(req)).status).toBe(429);
+      expect(h.protect).toHaveBeenCalledWith(req, { requested: 1 });
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(h.mockCreateClient).not.toHaveBeenCalled();
+    });
+
+    it.each(["error", "throw"])(
+      "fails closed when rate limiter is unavailable (%s)",
+      async (kind) => {
+        if (kind === "throw")
+          h.protect.mockRejectedValueOnce(new Error("offline"));
+        else
+          h.protect.mockResolvedValueOnce({
+            isDenied: () => false,
+            isErrored: () => true,
+          });
+        const req = new Request("http://localhost/api/oauth/register", {
+          method: "POST",
+          body: "{}",
+        }) as NextRequest;
+        expect((await postRegister(req)).status).toBe(503);
+        expect(global.fetch).not.toHaveBeenCalled();
+        expect(h.mockCreateClient).not.toHaveBeenCalled();
+      },
+    );
+
+    it("does not register through the admin API after network failure", async () => {
+      vi.mocked(global.fetch).mockRejectedValueOnce(new Error("offline"));
+      const req = new Request("http://localhost/api/oauth/register", {
+        method: "POST",
+        body: JSON.stringify({ redirect_uris: ["https://example.com/cb"] }),
+      }) as NextRequest;
+      expect((await postRegister(req)).status).toBe(503);
+      expect(h.mockCreateClient).not.toHaveBeenCalled();
     });
   });
 });

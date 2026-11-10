@@ -125,9 +125,8 @@ async function supabaseProxy(request: NextRequest) {
 
   // Refresh session if expired
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
 

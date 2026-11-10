@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "@/config/env";
+import aj from "@/lib/arcjet";
 import { getLogger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/supabase";
 
@@ -10,6 +11,26 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept",
 };
+
+function isValidRedirectUri(value: unknown): value is string {
+  if (
+    typeof value !== "string" ||
+    value.length > 2048 ||
+    /[\s\\]/.test(value)
+  ) {
+    return false;
+  }
+  try {
+    const uri = new URL(value);
+    if (uri.hash || value.includes("#") || uri.username || uri.password)
+      return false;
+    if (uri.protocol === "https:") return Boolean(uri.hostname);
+    // Private-use schemes must be domain-based (RFC 8252 section 7.1).
+    return /^[a-z][a-z0-9+-]*(?:\.[a-z0-9+-]+)+:$/.test(uri.protocol);
+  } catch {
+    return false;
+  }
+}
 
 export async function OPTIONS() {
   return new Response(null, {
@@ -25,10 +46,29 @@ export async function OPTIONS() {
  * @see https://datatracker.ietf.org/doc/html/rfc7591
  */
 export async function POST(req: NextRequest) {
+  try {
+    const decision = await aj.protect(req, { requested: 1 });
+    if (decision.isDenied()) {
+      return NextResponse.json(
+        { error: "rate_limit_exceeded" },
+        { status: 429, headers: CORS_HEADERS },
+      );
+    }
+    if (decision.isErrored()) throw new Error("Rate limiter unavailable");
+  } catch {
+    return NextResponse.json(
+      { error: "temporarily_unavailable" },
+      { status: 503, headers: CORS_HEADERS },
+    );
+  }
+
   let body: Record<string, unknown>;
 
   try {
     body = await req.json();
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      throw new Error("Expected an object");
+    }
   } catch {
     return NextResponse.json(
       {
@@ -60,7 +100,8 @@ export async function POST(req: NextRequest) {
   if (
     !Array.isArray(redirect_uris) ||
     redirect_uris.length === 0 ||
-    !redirect_uris.every((uri) => typeof uri === "string" && uri.length > 0)
+    redirect_uris.length > 10 ||
+    !redirect_uris.every(isValidRedirectUri)
   ) {
     return NextResponse.json(
       {
@@ -68,6 +109,35 @@ export async function POST(req: NextRequest) {
         error_description:
           "The redirect_uris parameter is required and must contain at least one valid URI.",
       },
+      { status: 400, headers: CORS_HEADERS },
+    );
+  }
+
+  if (
+    (client_name !== undefined &&
+      (typeof client_name !== "string" || client_name.length > 200)) ||
+    (client_uri !== undefined &&
+      (typeof client_uri !== "string" ||
+        !isValidRedirectUri(client_uri) ||
+        !client_uri.startsWith("https://"))) ||
+    (grant_types !== undefined &&
+      (!Array.isArray(grant_types) ||
+        !grant_types.every((grant) =>
+          ["authorization_code", "refresh_token"].includes(grant),
+        ))) ||
+    (response_types !== undefined &&
+      (!Array.isArray(response_types) ||
+        response_types.length !== 1 ||
+        response_types[0] !== "code")) ||
+    (scope !== undefined &&
+      (typeof scope !== "string" || scope.length > 1000)) ||
+    (token_endpoint_auth_method !== undefined &&
+      !["none", "client_secret_basic", "client_secret_post"].includes(
+        String(token_endpoint_auth_method),
+      ))
+  ) {
+    return NextResponse.json(
+      { error: "invalid_client_metadata" },
       { status: 400, headers: CORS_HEADERS },
     );
   }
@@ -95,7 +165,11 @@ export async function POST(req: NextRequest) {
       : ["authorization_code", "refresh_token"];
 
   const upstreamPayload = {
-    ...body,
+    redirect_uris,
+    client_name: name,
+    client_uri,
+    response_types: response_types ?? ["code"],
+    token_endpoint_auth_method,
     scope: effectiveScope,
     grant_types: effectiveGrantTypes,
   };
@@ -132,19 +206,33 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (![404, 405].includes(upstreamRes.status)) {
+      return NextResponse.json(
+        {
+          error: "invalid_client_metadata",
+          error_description: "Registration rejected by authorization server",
+        },
+        {
+          status: upstreamRes.status === 429 ? 429 : 400,
+          headers: CORS_HEADERS,
+        },
+      );
+    }
+
     log.warn(
       "Public DCR endpoint returned status {status}; falling back to admin registration API",
       { status: upstreamRes.status },
     );
   } catch (upstreamErr) {
-    log.warn(
-      "Public DCR endpoint fetch failed; falling back to admin API: {error}",
-      {
-        error:
-          upstreamErr instanceof Error
-            ? upstreamErr.message
-            : String(upstreamErr),
-      },
+    log.warn("Public DCR endpoint fetch failed: {error}", {
+      error:
+        upstreamErr instanceof Error
+          ? upstreamErr.message
+          : String(upstreamErr),
+    });
+    return NextResponse.json(
+      { error: "temporarily_unavailable" },
+      { status: 503, headers: CORS_HEADERS },
     );
   }
 
