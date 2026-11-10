@@ -10,6 +10,7 @@ import { CarGallery } from "@/app/(main)/cars/[id]/_components/car-gallery";
 import { CarInquiryCard } from "@/app/(main)/cars/[id]/_components/car-inquiry-card";
 import { CarSecondaryActions } from "@/app/(main)/cars/[id]/_components/car-secondary-actions";
 import { CarSpecifications } from "@/app/(main)/cars/[id]/_components/car-specifications";
+import { TradeIn } from "@/components/prototype-vehicle-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -36,7 +37,6 @@ import useAuthModal from "@/hooks/use-auth-modal";
 import { useCarAdmin } from "@/hooks/use-car-admin";
 import { useUser } from "@/hooks/use-user";
 import { formatCurrency } from "@/lib/helpers/format-currency";
-import { TradeIn } from "@/components/prototype-vehicle-form";
 import type { SerializedCar } from "@/types/car/serialized-car";
 import type { SerializedDealershipInfo } from "@/types/dealership/serialized-dealership-info";
 import type { UserTestDrive } from "@/types/test-drive/user-test-drive";

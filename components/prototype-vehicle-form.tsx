@@ -221,7 +221,9 @@ function PhotoUpload({
   useEffect(() => {
     const urls = photos.map((photo) => URL.createObjectURL(photo));
     setPreviews(urls);
-    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+    return () => {
+      for (const url of urls) URL.revokeObjectURL(url);
+    };
   }, [photos]);
   return (
     <div>

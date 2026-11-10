@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { isCurrentUserAdmin } from "@/actions/auth/is-current-user-admin";
 import { getCarById } from "@/actions/cars/get-car-by-id";
-import { CarDetails } from "@/app/(main)/cars/[id]/_components/car-details";
 import { PrototypeCarDetails } from "@/app/(main)/cars/_components/prototype-marketplace";
+import { CarDetails } from "@/app/(main)/cars/[id]/_components/car-details";
 import { prototypeCars } from "@/lib/prototype-inventory";
 import { prototypeMode } from "@/lib/prototype-mode";
 

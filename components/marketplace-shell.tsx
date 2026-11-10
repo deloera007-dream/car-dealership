@@ -36,7 +36,7 @@ export function MarketplaceShell({ children }: { children: ReactNode }) {
       <a href="#marketplace-content" className="sr-only focus:not-sr-only">
         Skip to content
       </a>
-      <header className="flex items-center justify-between border-b border-slate-100 px-5 py-5">
+      <header className="flex items-center justify-between border-slate-100 border-b px-5 py-5">
         <Link href="/cars" className="font-black text-2xl tracking-tighter">
           kavak<span className="text-blue-600">/</span>
           <span className="ml-2 font-medium text-[10px] text-slate-500 tracking-widest">
@@ -64,7 +64,7 @@ export function MarketplaceShell({ children }: { children: ReactNode }) {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold ${active ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:bg-slate-50"}`}
+              className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl font-semibold text-[11px] ${active ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:bg-slate-50"}`}
             >
               <Icon className="size-5" strokeWidth={active ? 2.4 : 1.7} />
               {label}

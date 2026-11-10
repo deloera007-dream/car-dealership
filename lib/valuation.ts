@@ -1,9 +1,9 @@
 import { valuationYear, vehicleCatalog } from "@/lib/vehicle-catalog";
 import {
-  equityLoanSchema,
   type EquityLoanInput,
-  valuationSchema,
+  equityLoanSchema,
   type VehicleValuationInput,
+  valuationSchema,
 } from "@/schemas/prototype.schema";
 
 const roundHundred = (value: number) => Math.round(value / 100) * 100;
