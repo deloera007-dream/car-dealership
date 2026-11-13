@@ -26,6 +26,8 @@ export const ROUTES = {
 
   SAVED_CARS: "/saved-cars",
   RESERVATIONS: "/reservations",
+  MY_APPLICATIONS: "/my-applications",
+  APPLY_FOR_FINANCING: (carId: string) => `${CARS_BASE}/${carId}/apply`,
   TEST_DRIVE: (carId: string) => `${TEST_DRIVE_BASE}/${carId}`,
 
   ADMIN: {
@@ -58,5 +60,6 @@ export const PROTECTED_ROUTES = [
   ROUTES.ADMIN.ADMIN,
   ROUTES.SAVED_CARS,
   ROUTES.RESERVATIONS,
+  ROUTES.MY_APPLICATIONS,
   ROUTES.AUTH.OAUTH_CONSENT,
 ] as const;

@@ -7,11 +7,6 @@ export type Json =
   | Json[];
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5";
-  };
   graphql_public: {
     Tables: {
       [_ in never]: never;
@@ -75,13 +70,13 @@ export type Database = {
           images?: string[] | null;
           mileage: number;
           model: string;
-          numberPlate?: string;
+          numberPlate: string;
           price: number;
           seats?: number | null;
           status?: Database["public"]["Enums"]["CarStatus"];
           storage_bytes?: number;
           transmission: string;
-          updatedAt: string;
+          updatedAt?: string;
           year: number;
         };
         Update: {
@@ -180,7 +175,12 @@ export type Database = {
           createdAt: string;
           email: string;
           id: string;
+          logoMimeType: string | null;
+          logoPath: string | null;
           logoSizeBytes: number | null;
+          logoUpdatedAt: string | null;
+          logoUrl: string | null;
+          logoVersion: string | null;
           name: string;
           phone: string;
           updatedAt: string;
@@ -191,10 +191,15 @@ export type Database = {
           createdAt?: string;
           email?: string;
           id: string;
+          logoMimeType?: string | null;
+          logoPath?: string | null;
           logoSizeBytes?: number | null;
+          logoUpdatedAt?: string | null;
+          logoUrl?: string | null;
+          logoVersion?: string | null;
           name?: string;
           phone?: string;
-          updatedAt: string;
+          updatedAt?: string;
           whatsappPhone?: string;
         };
         Update: {
@@ -202,7 +207,12 @@ export type Database = {
           createdAt?: string;
           email?: string;
           id?: string;
+          logoMimeType?: string | null;
+          logoPath?: string | null;
           logoSizeBytes?: number | null;
+          logoUpdatedAt?: string | null;
+          logoUrl?: string | null;
+          logoVersion?: string | null;
           name?: string;
           phone?: string;
           updatedAt?: string;
@@ -285,6 +295,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      loan_applications: {
+        Row: {
+          amount: number;
+          car_id: string;
+          created_at: string;
+          id: string;
+          status: Database["public"]["Enums"]["LoanApplicationStatus"];
+          term: number;
+          user_id: string;
+        };
+        Insert: {
+          amount: number;
+          car_id: string;
+          created_at?: string;
+          id?: string;
+          status?: Database["public"]["Enums"]["LoanApplicationStatus"];
+          term: number;
+          user_id: string;
+        };
+        Update: {
+          amount?: number;
+          car_id?: string;
+          created_at?: string;
+          id?: string;
+          status?: Database["public"]["Enums"]["LoanApplicationStatus"];
+          term?: number;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "loan_applications_car_id_fkey";
+            columns: ["car_id"];
+            isOneToOne: false;
+            referencedRelation: "Car";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "loan_applications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "User";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       TestDriveBooking: {
         Row: {
           bookingDate: string;
@@ -307,7 +362,7 @@ export type Database = {
           notes?: string | null;
           startTime: string;
           status?: Database["public"]["Enums"]["BookingStatus"];
-          updatedAt: string;
+          updatedAt?: string;
           userId: string;
         };
         Update: {
@@ -348,7 +403,7 @@ export type Database = {
           name: string | null;
           phone: string | null;
           role: Database["public"]["Enums"]["UserRole"];
-          supabaseAuthUserId: string | null;
+          supabaseAuthUserId: string;
           updatedAt: string;
         };
         Insert: {
@@ -359,7 +414,7 @@ export type Database = {
           name?: string | null;
           phone?: string | null;
           role?: Database["public"]["Enums"]["UserRole"];
-          supabaseAuthUserId?: string | null;
+          supabaseAuthUserId: string;
           updatedAt?: string;
         };
         Update: {
@@ -370,7 +425,7 @@ export type Database = {
           name?: string | null;
           phone?: string | null;
           role?: Database["public"]["Enums"]["UserRole"];
-          supabaseAuthUserId?: string | null;
+          supabaseAuthUserId?: string;
           updatedAt?: string;
         };
         Relationships: [];
@@ -380,18 +435,21 @@ export type Database = {
           carId: string;
           id: string;
           savedAt: string;
+          updatedAt: string;
           userId: string;
         };
         Insert: {
           carId: string;
           id?: string;
           savedAt?: string;
+          updatedAt?: string;
           userId: string;
         };
         Update: {
           carId?: string;
           id?: string;
           savedAt?: string;
+          updatedAt?: string;
           userId?: string;
         };
         Relationships: [
@@ -430,7 +488,7 @@ export type Database = {
           id?: string;
           isOpen?: boolean;
           openTime: string;
-          updatedAt: string;
+          updatedAt?: string;
         };
         Update: {
           closeTime?: string;
@@ -457,8 +515,11 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      get_global_storage_usage: { Args: never; Returns: number };
-      is_admin: { Args: never; Returns: boolean };
+      get_global_storage_usage: {
+        Args: Record<PropertyKey, never>;
+        Returns: number;
+      };
+      is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
     };
     Enums: {
       BookingStatus:
@@ -476,6 +537,7 @@ export type Database = {
         | "FRIDAY"
         | "SATURDAY"
         | "SUNDAY";
+      LoanApplicationStatus: "PENDING" | "APPROVED" | "REJECTED";
       UserRole: "USER" | "ADMIN";
     };
     CompositeTypes: {
@@ -627,6 +689,7 @@ export const Constants = {
         "SATURDAY",
         "SUNDAY",
       ],
+      LoanApplicationStatus: ["PENDING", "APPROVED", "REJECTED"],
       UserRole: ["USER", "ADMIN"],
     },
   },
