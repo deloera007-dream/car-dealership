@@ -52,11 +52,18 @@ function withCors(res: Response): Response {
 /**
  * Normalizes incoming POST requests before delegating to mcp-handler.
  * Avoids 415 Unsupported Media Type if automated client probes or gateways
- * omit the Content-Type header or send plain text.
+ * omit the Content-Type header. Explicit non-JSON media types are rejected.
  */
 export async function POST(req: Request) {
   const contentType = req.headers.get("content-type");
   const accept = req.headers.get("accept");
+
+  if (
+    contentType &&
+    contentType.split(";")[0].trim().toLowerCase() !== "application/json"
+  ) {
+    return withCors(new Response("Unsupported Media Type", { status: 415 }));
+  }
 
   let requestToHandle = req;
   const needsContentType =

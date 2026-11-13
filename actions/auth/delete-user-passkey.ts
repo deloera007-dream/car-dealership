@@ -17,6 +17,11 @@ export async function deleteUserPasskey(
 ): Promise<ActionResponse<null>> {
   try {
     const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) throw new Error("Not authenticated");
     const { error } = await supabase.auth.passkey.delete({ passkeyId });
 
     if (error) {

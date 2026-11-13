@@ -17,6 +17,7 @@ const REQUIRED_ENV_VARS = [
   "NEXT_PUBLIC_MAX_FAVICON_SIZE_KB",
   "NEXT_PUBLIC_TOTAL_STORAGE_LIMIT_GB",
   "SKIP_ENV_VALIDATION",
+  "NEXT_PUBLIC_PROTOTYPE_MODE",
   "LOG_LEVEL",
 ] as const;
 
@@ -328,6 +329,33 @@ describe("config/env", () => {
   describe("validateEnv pure function usage", () => {
     beforeEach(() => {
       setValidRequiredEnv();
+    });
+
+    it("rejects process-level validation bypass during production builds", async () => {
+      process.env.NODE_ENV = "production";
+      process.env.SKIP_ENV_VALIDATION = "true";
+      await expect(loadEnvModule()).rejects.toThrow(
+        "SKIP_ENV_VALIDATION is not allowed in production",
+      );
+    });
+
+    it("rejects runtime bypass even when the process is not production", async () => {
+      const { validateEnv } = await loadEnvModule();
+      expect(() =>
+        validateEnv(
+          { NODE_ENV: "production", SKIP_ENV_VALIDATION: "true" },
+          true,
+        ),
+      ).toThrow("SKIP_ENV_VALIDATION is not allowed in production");
+    });
+
+    it("does not let prototype mode supply production placeholder credentials", async () => {
+      process.env.NODE_ENV = "production";
+      process.env.NEXT_PUBLIC_PROTOTYPE_MODE = "true";
+      delete process.env.SUPABASE_SECRET_KEY;
+      await expect(loadEnvModule()).rejects.toThrow(
+        "Invalid environment variables",
+      );
     });
 
     it("can validate pure input objects for client without touching process.env", async () => {

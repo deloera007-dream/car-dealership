@@ -110,16 +110,12 @@ async function runOAuthSimulation() {
   });
 
   const consentLocation = authorizeRes.headers.get("location");
-  console.log(`   Full consent location: ${consentLocation}`);
   if (!consentLocation?.includes("authorization_id=")) {
-    throw new Error(
-      `Authorize failed. Status: ${authorizeRes.status}, location: ${consentLocation}`,
-    );
+    throw new Error(`Authorize failed. Status: ${authorizeRes.status}`);
   }
 
   const consentUrl = new URL(consentLocation);
   const authorizationId = consentUrl.searchParams.get("authorization_id");
-  console.log(`   Consent authorization_id: ${authorizationId}`);
 
   // 4. Fetch authorization details (which associates user with authorization) and approve
   console.log(
@@ -145,7 +141,6 @@ async function runOAuthSimulation() {
 
   const finalRedirect = new URL(approveRes.data.redirect_url);
   const code = finalRedirect.searchParams.get("code");
-  console.log(`   Obtained authorization code: ${code}`);
 
   // 5. Exchange code for tokens
   console.log("5. Exchanging code at /auth/v1/oauth/token...");
@@ -170,7 +165,7 @@ async function runOAuthSimulation() {
   console.log(`   Token response status: ${tokenRes.status}`);
 
   if (!tokenRes.ok || tokenData.error) {
-    console.error("   Token exchange error:", tokenData);
+    console.error("   Token exchange failed:", tokenRes.status);
     return false;
   }
 
@@ -184,18 +179,6 @@ async function runOAuthSimulation() {
     tokenData.refresh_token ? "PRESENT" : "MISSING",
   );
   console.log("   - id_token:", tokenData.id_token ? "PRESENT" : "MISSING");
-
-  if (tokenData.id_token) {
-    const payload = JSON.parse(
-      Buffer.from(tokenData.id_token.split(".")[1], "base64url").toString(
-        "utf8",
-      ),
-    );
-    console.log(
-      "   Decoded ID token claims:",
-      JSON.stringify(payload, null, 2),
-    );
-  }
 
   return true;
 }

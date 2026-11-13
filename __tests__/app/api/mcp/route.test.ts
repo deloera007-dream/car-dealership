@@ -70,6 +70,16 @@ describe("MCP Route Handlers: /api/mcp & /.well-known/oauth-protected-resource",
   });
 
   describe("Streamable HTTP Handshake & Header Validation", () => {
+    it("rejects text/plain instead of promoting a browser-simple request to JSON", async () => {
+      const response = await POST(
+        new Request("http://localhost:3000/api/mcp", {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: "{}",
+        }),
+      );
+      expect(response.status).toBe(415);
+    });
     it("handles initialize handshake with 200 and server capabilities", async () => {
       const request = new Request("http://localhost:3000/api/mcp", {
         method: "POST",
@@ -130,6 +140,8 @@ describe("MCP Route Handlers: /api/mcp & /.well-known/oauth-protected-resource",
           },
         }),
       });
+
+      request.headers.delete("content-type");
 
       const response = await POST(request);
       expect(response.status).toBe(200);

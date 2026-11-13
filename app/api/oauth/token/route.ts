@@ -72,9 +72,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (!upstreamRes.ok) {
-      log.warn("OAuth token exchange upstream error: {status} {data}", {
+      log.warn("OAuth token exchange upstream error: {status}", {
         status: upstreamRes.status,
-        data: responseData,
       });
     }
 

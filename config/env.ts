@@ -91,10 +91,20 @@ export function validateEnv(
   isServerEnv: boolean = typeof window === "undefined",
 ): Env {
   const schema = isServerEnv ? serverEnvSchema : clientEnvSchema;
-  const skipValidation =
-    process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true" ||
+  const isProduction =
+    process.env.NODE_ENV === "production" ||
+    runtimeEnv.NODE_ENV === "production";
+  const skipRequested =
     process.env.SKIP_ENV_VALIDATION === "true" ||
     runtimeEnv.SKIP_ENV_VALIDATION === "true";
+
+  if (isProduction && skipRequested) {
+    throw new Error("SKIP_ENV_VALIDATION is not allowed in production");
+  }
+
+  const skipValidation =
+    !isProduction &&
+    (skipRequested || process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true");
 
   if (skipValidation) {
     const envToValidate = {
